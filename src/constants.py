@@ -1,0 +1,12 @@
+# times single query is run.
+RESAMPLING_COUNT = 1
+# TAVILY Search Results Count
+MAX_RESULTS=3
+
+# WEB page retrieval
+CHUNK_SIZE=300
+CHUNK_OVERLAP=30    
+TOP_K_WEB_PAGES = 3
+
+# PROMPT SUMMARIZATION
+KEEP_LAST_N = 4
