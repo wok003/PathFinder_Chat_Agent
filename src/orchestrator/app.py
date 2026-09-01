@@ -3,12 +3,12 @@ import gradio as gr
 import requests
 import pandas as pd
 
-from attachment_preprocessor import load_python_script, load_excel, transcribe_audio
-from reasoner_prompt import REASONER_PROMPT
-from formatter_prompt import FORMATTER_PROMPT # we can use langchain support for this
-from workflow_builder import Workflow_builder
-from agent_builder import AgentBuilder
-from constants import RESAMPLING_COUNT
+from PathFinder_Agent.src.orchestrator.attachment_preprocessor import load_python_script, load_excel, transcribe_audio
+from PathFinder_Agent.src.orchestrator.reasoner_prompt import REASONER_PROMPT
+from PathFinder_Agent.src.orchestrator.formatter_prompt import FORMATTER_PROMPT # TODO:: use langchain support for this
+from PathFinder_Agent.src.orchestrator.workflow_builder import Workflow_builder
+from PathFinder_Agent.src.orchestrator.agent_builder import AgentBuilder
+from PathFinder_Agent.src.orchestrator.constants import RESAMPLING_COUNT
 
 # (Keep Constants as is)
 # --- Constants ---

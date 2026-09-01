@@ -1,0 +1,25 @@
+# This tells pip how to build your project
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "orchestrator_project"
+version = "0.1.0"
+description = "A project to manage orchestrator logic"
+# List your dependencies here (like requirements.txt)
+dependencies = [
+    "requests",
+    "pytest",
+    "numpy",
+    # Add other libraries you use here
+]
+
+[tool.setuptools.packages.find]
+# This tells the system to look inside the 'src' folder for packages
+where = ["src"]
+
+[tool.pytest.ini_options]
+# This is where you configure pytest specifically
+testpaths = ["tests"]
+python_files = ["test_*.py"]

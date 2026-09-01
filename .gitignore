@@ -1,2 +1,6 @@
 artifacts/
 .env
+__pycache__
+.pytest_cache
+orchestrator.egg-info
+orchestrator_project.egg-info
