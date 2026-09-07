@@ -14,3 +14,4 @@ def toolbox_init():
 def test_string_reversal(text_input, expected_output, toolbox_init):
     reversed_text = toolbox_init.reverse_string(text_input)
     assert reversed_text == expected_output
+
