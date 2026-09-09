@@ -19,7 +19,8 @@ def setup_logging():
         "logs/app_log.log", 
         when="D", 
         interval=1, 
-        backupCount=7
+        backupCount=7,
+        utc=True
     )
 
     # -----------------------------
@@ -32,17 +33,17 @@ def setup_logging():
         "asyncio",
         "trafilatura",
         "hugging_face",
-        "sentence_transformers"
+        "sentence_transformers",
+        "langsmith"
     ]
 
     for logger_name in NOISY_LOGGERS:
         logging.getLogger(logger_name).setLevel(logging.WARNING)
 
-
     file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-    
     logging.getLogger().addHandler(file_handler)
 
 # Call the setup immediately so it configures the root logger 
 # as soon as this file is imported.
 setup_logging()
+

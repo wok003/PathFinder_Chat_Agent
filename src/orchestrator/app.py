@@ -6,7 +6,7 @@ import pandas as pd
 from orchestrator.attachment_preprocessor import load_python_script, load_excel, transcribe_audio
 from orchestrator.reasoner_prompt import REASONER_PROMPT
 from orchestrator.formatter_prompt import FORMATTER_PROMPT # TODO:: use langchain support for this
-from orchestrator.workflow_builder import Workflow_builder
+from orchestrator.workflow_builder import WorkflowBuilder
 from orchestrator.agent_builder import AgentBuilder
 from orchestrator.constants import RESAMPLING_COUNT
 
@@ -25,7 +25,7 @@ class BasicAgent:
         self.agent_framework = AgentBuilder()
 
         # 2. Create the workflow object here
-        self.workflow = Workflow_builder(self.agent_framework)
+        self.workflow = WorkflowBuilder(self.agent_framework)
 
         # 3. Initialise a thread_id variable for each question
         self.thread_id = 1

@@ -1,14 +1,19 @@
 from langgraph.graph import MessagesState # memory
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode, tools_condition
-from IPython.display import Image, display
+from IPython.display import Image
 from langchain_core.messages import SystemMessage, HumanMessage
+from langsmith import traceable
+import logging
+from pathlib import Path
+from common.logger_config import setup_logging
+from orchestrator.reasoner_prompt import REASONER_PROMPT
+from orchestrator.formatter_prompt import FORMATTER_PROMPT  
+from orchestrator.constants import KEEP_LAST_N
+from orchestrator.agent_builder import AgentBuilder
 
-from PathFinder_Agent.src.orchestrator.reasoner_prompt import REASONER_PROMPT
-from PathFinder_Agent.src.orchestrator.formatter_prompt import FORMATTER_PROMPT  
-from PathFinder_Agent.src.orchestrator.constants import KEEP_LAST_N
+# TODO:: UnitTest each component and finalise the pipeline 
 
-from PathFinder_Agent.src.orchestrator.agent_builder import AgentBuilder
 
 # CONSTANT
 SUMMARIZATION_PROMPT = """
@@ -24,13 +29,17 @@ class WorkflowBuilder:
         Args:
             agent_framework (AgentBuilder): Agent Foundational Construct.
         """
+        # --- Add Logger
+        self.logger = logging.getLogger(__name__)
+
         self.agent_framework = agent_framework
 
         # end-point to workflow invocation
         self.react_workflow = None
-        print("Workflow build started...")
+        
+        self.logger.info("Workflow build started...")
         self.workflow()
-        print("Workflow built successfully!!!")
+        self.logger.info("Workflow built successfully!!!")
 
     def workflow(self):
         """
@@ -52,17 +61,17 @@ class WorkflowBuilder:
         builder.add_edge("formatter", END)
 
         # compile the workflow with the memory
-        #self.react_workflow = builder.compile(checkpointer=self.agent_framework.memory)
-        self.react_workflow = builder.compile()
+        self.react_workflow = builder.compile(checkpointer=self.agent_framework.memory)
+        #self.react_workflow = builder.compile()
 
         # 
-        print("built node")
+        self.logger.info("Workflow compile Successfully!!")
         self.visualise_workflow()
 
     # define node working
     def node_assistant(self, State: MessagesState):
         """
-        Invokes Reasoning Agent after aptly summarizing the input message history.
+        Invokes Reasoning Agent after aptly applying compaction to the input message history.
 
         Args:
             State (MessagesState): Message History, contains all the conversation between agent, user, and tool use. 
@@ -71,19 +80,24 @@ class WorkflowBuilder:
             MessagesState: State updated with apt summarized past messages and current response.
         """
         # do something with the input state
-        print("node_assistant running")
+        self.logger.info("node_assistant running")
         sys_msg = SystemMessage(content= REASONER_PROMPT)   
 
+        self.logger.debug(f"System Message: {sys_msg}")
+        self.logger.debug(f'display State Messages: {State["messages"]}')
+
+        # TODO:: Apply token based compaction.
         # Stage 0: Applying Message Summarization
         past_summary_and_recent_messages = self.summarize_old_tool_outputs(State["messages"], KEEP_LAST_N)
+
+        self.logger.debug(f"summarized messages: {past_summary_and_recent_messages}")
 
         ## TODO:: check if this really modifies "messages" key of the MessagesState.
         ## TODO:: check the significance of having a checkpointer.
         # Stage 1: Reasoning/Tool-use Agent
-        response = self.agent_framework.llm_with_tools.invoke([sys_msg]+ 
-                                                               past_summary_and_recent_messages
-                                                            )
-        print("node assistant finished")                                                
+        response = self.agent_framework.llm_with_tools.invoke([sys_msg] + past_summary_and_recent_messages)
+        self.logger.debug(f"LLM Response: {response}")                       
+        self.logger.info("node assistant finished")                                                
         return {"messages": [response]}
 
     def format_node(self, state: MessagesState):
@@ -114,7 +128,19 @@ class WorkflowBuilder:
             return raw_output.strip()  
 
     def visualise_workflow(self):
-        display(Image(self.react_workflow.get_graph().draw_mermaid_png()))
+
+        # Path to the Artifact Folder 
+        current_file_path = Path(__file__).resolve()
+        BASE_DIR = current_file_path.parents[2]
+
+        # Get the raw bytes of the image
+        png_data = self.react_workflow.get_graph().draw_mermaid_png()
+
+        # Save the bytes to a file
+        with open(f"{BASE_DIR}/artifacts/pathfinder_graph.png", "wb") as f:
+            f.write(png_data)
+
+        self.logger.info("Graph saved as graph.png")
 
     def summarize_old_tool_outputs(self, messages: list, keep_last_n: int = 4) -> list:
         """Once messages exceed a threshold, collapse older ToolMessages into
@@ -143,22 +169,22 @@ if __name__ == "__main__":
 
 #query = """In the video https://www.youtube.com/watch?v=L1vXCYZAYYM, what is the highest number of bird species to be on camera simultaneously?"""
 #query = """Who nominated the only Featured Article on English Wikipedia about a dinosaur that was promoted in November 2016?"""
-# query = """Given this table defining * on the set S = {a, b, c, d, e}
+    query = """Given this table defining * on the set S = {a, b, c, d, e}
 
-#         |*|a|b|c|d|e|
-#         |---|---|---|---|---|---|
-#         |a|a|b|c|b|d|
-#         |b|b|c|a|e|c|
-#         |c|c|a|b|b|a|
-#         |d|b|e|b|e|d|
-#         |e|d|b|a|d|c|
+            |*|a|b|c|d|e|
+            |---|---|---|---|---|---|
+            |a|a|b|c|b|d|
+            |b|b|c|a|e|c|
+            |c|c|a|b|b|a|
+            |d|b|e|b|e|d|
+            |e|d|b|a|d|c|
 
-#         provide the subset of S involved in any possible counter-examples that prove * is not commutative. Provide your answer as a comma separated list of the elements in the set in alphabetical order."
-#         """
-    query = """what is 3 + 3 - 3 * 5 / 2 ? """
+            provide the subset of S involved in any possible counter-examples that prove * is not commutative. Provide your answer as a comma separated list of the elements in the set in alphabetical order."
+            """
+    #query = "what is 3 + 3 - 3 * 5 / 2 ? "
     messages = {"messages": [query]}
     config = agent.config
     response = task.react_workflow.invoke(messages, config)
 
     print(response["messages"][-1].content)
-    print(task.format_answer(response["messages"][-1].content))
+    #print(task.format_answer(response["messages"][-1].content)) ## TODO: NOT INTEGRATED

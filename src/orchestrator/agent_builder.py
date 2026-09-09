@@ -14,15 +14,11 @@ from langsmith import traceable
 from common.logger_config import setup_logging
 
 ## TODO:: 
+# 0. Rigorously unit test the functionalities.
 # 1a. Create Dataset to iteratively improve the toolbox
 # 1b. Improve Agent's Toolbox : Use RAG cookbook, Contextual Embedding, and Knowledge Graphs 
-# 2. Implement TRY-EXCEPT: 
-# 3. Implement Logging 
-# 4. Revise ASYNC 
-
-# (Keep Constants as is)
-# --- Constants ---
-
+# 1c. Improve ToolBox Descriptions
+  
 # --- API KEYS ---
 load_dotenv()
 

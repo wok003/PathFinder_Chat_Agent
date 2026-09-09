@@ -5,3 +5,4 @@ __pycache__
 orchestrator.egg-info
 orchestrator_project.egg-info
 resources
+.log
