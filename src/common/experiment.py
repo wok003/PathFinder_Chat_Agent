@@ -22,13 +22,22 @@ def correct_label(
     score = int(outputs.get("output") == reference_outputs.get("label"))
     return {"score": score, "key": "correct_label"}
 
+def total_score(outputs: list[dict], reference_outputs: list[dict]) -> dict:
+    """
+    """
+    score = 0.0
+    logger.info(f"Input to the Evaluator, reference_outputs: {reference_outputs}, outputs: {outputs}")
+    for output_dict, reference_output_dict in zip(outputs, reference_outputs):
+        if output_dict.get("output") == reference_output_dict.get("label"):
+            score += 1
+
+    return {"key": "total_score", "score": score}
+
 def target_function(inputs: dict):
     logger.info(f"Query: {inputs}, Location: target function")
     response = agent(inputs["question"])
     logger.info(f"Final Output: {response}, Location: target function")
     return response
-
-
 
 # --- Add Logger
 logger = logging.getLogger(__name__)
@@ -43,5 +52,6 @@ evaluate(
     target_function,
     data=client.list_examples(dataset_name=dataset_name, splits=[splits]),  # We pass in a list of Splits
     evaluators=[correct_label],
-    experiment_prefix="Reasoning Examples Training split"
+    experiment_prefix="Reasoning Examples Training split",
+    summary_evaluators=[total_score]
 )
